@@ -8,6 +8,6 @@ This project provides an implementation of [RFC 7807][rfc-7807] for use with [Er
 
 # ScalaDoc #
 
-[The Scaladoc for errors4s-http-7807 may be viewed here][javadoc].
+[The Scaladoc for @PROJECT_NAME@ may be viewed here][javadoc].
 
-[javadoc]: https://www.javadoc.io/doc/org.errors4s/errors4s-http-7807_2.13/1.0.0.0-RC0/index.html "Scaladoc"
+[javadoc]: @SCALADOC_LINK@ "Scaladoc"

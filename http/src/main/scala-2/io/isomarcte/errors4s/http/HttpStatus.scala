@@ -1,4 +1,4 @@
-package io.isomarcte.errors4s.http
+package org.errors4s.http
 
 import scala.reflect.macros.blackbox.Context
 
@@ -51,7 +51,7 @@ object HttpStatus {
           error => c.abort(c.enclosingPosition, error),
           value =>
             c.Expr(
-              q"""_root_.io.isomarcte.errors4s.http.HttpStatus.from(${value
+              q"""_root_.org.errors4s.http.HttpStatus.from(${value
                 .value}).toOption.getOrElse(throw new AssertionError("Error during macro expansion of HttpStatus. This is a bug in errors4s-http. Please report it."))"""
             )
         )
