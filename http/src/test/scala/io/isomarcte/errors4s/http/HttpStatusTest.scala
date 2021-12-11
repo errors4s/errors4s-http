@@ -1,8 +1,10 @@
-package io.isomarcte.errors4s.http
+package org.errors4s.http
 
-final class HttpStatusTest extends BaseTest {
+import munit._
 
-  "Creating compile time valid HttpStatus values" should "compile correctly" in {
-    HttpStatus(100) shouldBe HttpStatus.unsafe(100)
+final class HttpStatusTest extends FunSuite {
+
+  test("Creating compile time valid HttpStatus values should compile correctly") {
+    assertEquals(HttpStatus(100), HttpStatus.unsafe(100))
   }
 }

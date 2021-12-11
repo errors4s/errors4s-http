@@ -1,7 +1,7 @@
-package io.isomarcte.errors4s.http
+package org.errors4s.http
 
-import io.isomarcte.errors4s.core._
-import io.isomarcte.errors4s.core.syntax.all._
+import org.errors4s.core._
+import org.errors4s.core.syntax.all._
 
 /** An error type which represents an HTTP related problem.
   *

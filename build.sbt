@@ -1,158 +1,154 @@
-import ReleaseTransformations._
-import sbt.librarymanagement.VersionNumber
-import _root_.io.isomarcte.errors4s.sbt.ScalaApiDoc
 import _root_.io.isomarcte.sbt.version.scheme.enforcer.core._
-import _root_.io.isomarcte.errors4s.build._
+import _root_.org.errors4s.sbt.GAVs._
+import _root_.org.errors4s.sbt._
 
 // Constants //
 
-lazy val isomarcteOrg  = "io.isomarcte"
-lazy val jreVersion    = "15"
-lazy val projectName   = "errors4s"
-lazy val projectUrl    = url("https://github.com/isomarcte/errors4s")
-lazy val scala212      = "2.12.13"
-lazy val scala213      = "2.13.5"
-lazy val scala30       = "3.0.0"
-lazy val scalaVersions = Set(scala212, scala213)
+lazy val org           = "org.errors4s"
+lazy val jreVersion    = "17"
+lazy val projectName   = "errors4s-http-7807"
+lazy val projectUrl    = url(s"https://github.com/errors4s/${projectName}")
+lazy val scala212      = "2.12.14"
+lazy val scala213      = "2.13.7"
+lazy val scala3        = "3.1.0"
+lazy val scalaVersions = Set(scala212, scala213, scala3)
 
-// Groups //
+// SBT Command Aliases //
 
-lazy val chrisDavenportG  = "io.chrisdavenport"
-lazy val circeG           = "io.circe"
-lazy val comcastG         = "com.comcast"
-lazy val fs2G             = "co.fs2"
-lazy val http4sG          = "org.http4s"
-lazy val organizeImportsG = "com.github.liancheng"
-lazy val refinedG         = "eu.timepit"
-lazy val scalacheckG      = "org.scalacheck"
-lazy val scalatestG       = "org.scalatest"
-lazy val scodecG          = "org.scodec"
-lazy val shapelessG       = "com.chuusai"
-lazy val slf4jG           = "org.slf4j"
-lazy val typelevelG       = "org.typelevel"
-
-// Artifacts //
-
-lazy val catsCoreA        = "cats-core"
-lazy val catsEffectA      = "cats-effect"
-lazy val catsKernelA      = "cats-kernel"
-lazy val circeCoreA       = "circe-core"
-lazy val circeGenericA    = "circe-generic"
-lazy val circeRefinedA    = "circe-refined"
-lazy val fs2CoreA         = "fs2-core"
-lazy val http4sCirceA     = "http4s-circe"
-lazy val http4sClientA    = "http4s-client"
-lazy val http4sCoreA      = "http4s-core"
-lazy val http4sLawsA      = "http4s-laws"
-lazy val http4sServerA    = "http4s-server"
-lazy val ip4sCoreA        = "ip4s-core"
-lazy val jawnParserA      = "jawn-parser"
-lazy val literallyA       = "literally"
-lazy val organizeImportsA = "organize-imports"
-lazy val refinedA         = "refined"
-lazy val refinedCatsA     = "refined-cats"
-lazy val scalacheckA      = "scalacheck"
-lazy val scalatestA       = "scalatest"
-lazy val scodecBitsA      = "scodec-bits"
-lazy val shapelessA       = "shapeless"
-lazy val slf4jApiA        = "slf4j-api"
-lazy val vaultA           = "vault"
-
-// Versions //
-
-lazy val catsEffectV      = "2.5.1"
-lazy val catsV            = "2.6.1"
-lazy val circeV           = "0.13.0"
-lazy val fs2V             = "2.5.6"
-lazy val http4sV          = "0.21.23"
-lazy val ip4sV            = "1.4.0"
-lazy val jawnParserV      = "1.0.1"
-lazy val literallyV       = "1.0.2"
-lazy val organizeImportsV = "0.4.4"
-lazy val refinedV         = "0.9.25"
-lazy val scalacheckV      = "1.15.4"
-lazy val scalatestV       = "3.2.9"
-lazy val scodecBitsV      = "1.1.27"
-lazy val shapelessV       = "2.3.7"
-lazy val slf4jApiV        = "1.7.30"
-lazy val vaultV           = "2.0.0"
+// Usually run before making a PR
+addCommandAlias(
+  "full_build",
+  s";+clean;githubWorkflowGenerate;+test;+test:doc;+versionSchemeEnforcerCheck;++${scala213};scalafmtAll;scalafmtSbt;scalafixAll;docs/mdoc"
+)
 
 // Functions //
 
 def isScala3(version: String): Boolean = version.startsWith("3")
 
-// Common Settings
+def initialImports(packages: List[String], isScala3: Boolean): String = {
+  val wildcard: Char =
+    if (isScala3) {
+      '*'
+    } else {
+      '_'
+    }
+
+  packages.map(value => s"import ${value}.${wildcard}").mkString("\n")
+}
+
+// Dependency Overrides //
+
+ThisBuild / dependencyOverrides += G.scalametaG % A.semanticdbA % V.semanticdbV cross CrossVersion.full
+
+// Common Settings //
 
 ThisBuild / crossScalaVersions := scalaVersions.toSeq
 
-ThisBuild / organization := isomarcteOrg
+ThisBuild / organization := org
 ThisBuild / scalaVersion := scala213
-ThisBuild / scalafixDependencies ++= List(organizeImportsG %% organizeImportsA % organizeImportsV)
-ThisBuild / scalafixScalaBinaryVersion := "2.13"
+ThisBuild / scalafixDependencies ++= List(G.organizeImportsG %% A.organizeImportsA % V.organizeImportsV)
+ThisBuild / scalafixScalaBinaryVersion := scalaBinaryVersion.value
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
+// Baseline version for repo split
+
+ThisBuild / versionSchemeEnforcerInitialVersion := Some("1.0.0.0")
+ThisBuild / versionScheme := Some("pvp")
 
 // GithubWorkflow
 ThisBuild / githubWorkflowPublishTargetBranches := Nil
 ThisBuild / githubWorkflowOSes := Set("macos-latest", "ubuntu-latest").toList
-ThisBuild / githubWorkflowJavaVersions := Set("adopt@1.15", "adopt@1.11", "adopt@1.8").toList
-ThisBuild / githubWorkflowBuildPreamble :=
-  List(
-    WorkflowStep.Sbt(List("scalafmtSbtCheck", "scalafmtCheckAll")),
-    WorkflowStep.Sbt(List("versionSchemeEnforcerCheck")),
-    WorkflowStep.Run(List("sbt 'scalafixAll --check'")),
-    WorkflowStep.Sbt(List("doc"))
-  )
-ThisBuild / githubWorkflowBuildPostamble :=
-  List(WorkflowStep.Sbt(List("test:doc", "versionSchemeEnforcerCheck", "+core/test")))
-ThisBuild / versionScheme := Some("pvp")
+ThisBuild / githubWorkflowJavaVersions :=
+  Set("17", "11", "8").map(version => JavaSpec(JavaSpec.Distribution.Temurin, version)).toList
+ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("versionSchemeEnforcerCheck", "Test / doc")))
 
-lazy val docSettings: List[Def.Setting[_]] = List(
-  apiURL :=
-    Some(url(s"https://www.javadoc.io/doc/io.isomarcte/errors4s_${scalaBinaryVersion.value}/latest/index.html")),
-  autoAPIMappings := true,
-  Compile / doc / apiMappings ++= {
-    val moduleLink: String => (java.io.File, java.net.URL) = module => ScalaApiDoc.jreModuleLink(jreVersion)(module)
-    Map(moduleLink("java.base"))
-  },
-  Compile / doc / scalacOptions ++= {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, n)) if n <= 12 =>
-        List("-no-link-warnings")
-      case _ =>
-        List("-jdk-api-doc-base", s"https://docs.oracle.com/en/java/javase/${jreVersion}/docs/api")
-    }
-  }
-)
+// Doc Settings
 
-lazy val commonSettings: List[Def.Setting[_]] =
+def scaladocLink(scalaBinaryVersion: String, module: String, version: String): String =
+  s"https://www.javadoc.io/doc/${org}/${module}_${scalaBinaryVersion}/${version}/index.html"
+
+def javadocIoLink(groupId: String, artifactId: String, depVersion: String, scalaBinaryVersion: Option[String]): String =
+  scalaBinaryVersion
+    .fold(s"https://www.javadoc.io/doc/${groupId}/${artifactId}/${depVersion}/api/")(scalaBinaryVersion =>
+      s"https://www.javadoc.io/doc/${groupId}/${artifactId}_${scalaBinaryVersion}/${depVersion}/api/"
+    )
+
+def docSettings(module: String): List[Def.Setting[_]] =
   List(
-    scalaVersion := scala213,
-    scalacOptions := {
-      scalacOptions.value ++
-        (if (isScala3(scalaBinaryVersion.value)) {
-           List("-source:3.0-migration") ++
-             (if (JREMajorVersion.majorVersion > 8) {
-                List("-release:8")
-              } else {
-                Nil
-              })
-         } else {
-           List("-target:jvm-1.8", "-Wconf:cat=unused-imports:info")
-         })
-    },
-    libraryDependencies ++= {
+    apiURL := Some(url(scaladocLink(scalaBinaryVersion.value, module, version.value))),
+    autoAPIMappings := true,
+    Compile / doc / apiMappings := {
       if (isScala3(scalaBinaryVersion.value)) {
-        Nil
+        Map.empty[File, URL]
       } else {
-        List(
-          compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-          compilerPlugin(typelevelG    % "kind-projector"     % "0.13.0" cross CrossVersion.full)
-        )
+        val moduleLink: String => (java.io.File, java.net.URL) = module => ScalaApiDoc.jreModuleLink(jreVersion)(module)
+        Map(moduleLink("java.base"))
       }
     },
-    crossScalaVersions := scalaVersions.toSeq
-  ) ++ docSettings
+    Compile / doc / scalacOptions := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          List(
+            "-external-mappings:" +
+              List(
+                s".*java.*::javadoc::https://docs.oracle.com/en/java/javase/${jreVersion}/docs/api/java.base/",
+                """.*scala/.*::scaladoc3::http://dotty.epfl.ch/api/""",
+                s""".*org/scalacheck/.*::scaladoc3::${javadocIoLink(
+                  G.scalacheckG,
+                  A.scalacheckA,
+                  V.scalacheckV,
+                  Some("3")
+                )}"""
+              ).mkString(","),
+            s"-social-links:github::https://github.com/errors4s/${projectName}",
+            "-verbose"
+          )
+        case Some((2, n)) =>
+          List("-language:experimental.macros") ++
+            (if (n <= 12) {
+               List("-no-link-warnings")
+             } else {
+               List("-jdk-api-doc-base", s"https://docs.oracle.com/en/java/javase/${jreVersion}/docs/api")
+             })
+        case otherwise =>
+          throw new AssertionError(s"Unhandled Scala version in Compile / doc/ scalacOptions: ${otherwise}")
+      }
+    }
+  )
+
+lazy val commonSettings: List[Def.Setting[_]] = List(
+  scalacOptions := {
+    val currentOptions: Seq[String] = scalacOptions.value
+    (
+      if (isScala3(scalaBinaryVersion.value)) {
+        // Remove -source since as of 0.1.19 of sbt-tpolecat it sets -source
+        // to be `-source:future`, but we only want that on sources which are
+        // _strictly_ Scala 3, we want `-source:3.0-migration` from cross
+        // compiled sources.
+        currentOptions.filterNot(_.startsWith("-source")) ++ List("-source:3.0-migration") ++
+          (if (JREMajorVersion.majorVersion > 8) {
+             List("-release:8")
+           } else {
+             Nil
+           })
+      } else {
+        currentOptions ++ List("-target:jvm-1.8", "-Wconf:cat=unused-imports:info")
+      }
+    )
+  },
+  libraryDependencies ++= {
+    if (isScala3(scalaBinaryVersion.value)) {
+      Nil
+    } else {
+      List(
+        compilerPlugin(G.betterMonadicForG %% A.betterMonadicForA % V.betterMonadicForV),
+        compilerPlugin(G.typelevelG         % A.kindProjectorA    % V.kindProjectorV cross CrossVersion.full)
+      )
+    }
+  },
+  crossScalaVersions := scalaVersions.toSeq
+)
 
 // Publish Settings //
 
@@ -165,88 +161,31 @@ lazy val publishSettings = List(
     false
   },
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
+    val nexus = "https://s01.oss.sonatype.org/"
     if (isSnapshot.value)
       Some("snapshots" at nexus + "content/repositories/snapshots")
     else
       Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
-  scmInfo := Some(ScmInfo(projectUrl, "scm:git:git@github.com:isomarcte/errors4s.git")),
+  scmInfo := Some(ScmInfo(projectUrl, s"scm:git:git@github.com:errors4s/${projectName}.git")),
   developers :=
     List(Developer("isomarcte", "David Strawn", "isomarcte@gmail.com", url("https://github.com/isomarcte"))),
-  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-  releaseCrossBuild := true,
-  releasePublishArtifactsAction := PgpKeys.publishSigned.value
+  credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
 )
-
-// Release Process //
-
-releaseProcess :=
-  Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    releaseStepCommandAndRemaining("+versionCheck"),
-    releaseStepCommandAndRemaining("+publishSigned"),
-    commitReleaseVersion,
-    tagRelease,
-    setNextVersion,
-    commitNextVersion,
-    pushChanges
-  )
 
 // Root //
 
-lazy val errors4s = (project in file("."))
+lazy val root = (project in file("."))
   .settings(commonSettings, publishSettings)
   .settings(
     List(
-      name := projectName,
+      name := s"${projectName}-root",
       Compile / packageBin / publishArtifact := false,
       Compile / packageSrc / publishArtifact := false
     )
   )
-  .aggregate(core, circe, http, http4s, `http-circe`, `http4s-circe`)
-  .disablePlugins(ScalaUnidocPlugin)
+  .aggregate(http)
   .disablePlugins(SbtVersionSchemeEnforcerPlugin)
-
-// Core //
-
-lazy val core = project
-  .settings(commonSettings, publishSettings)
-  .settings(
-    name := s"${projectName}-core",
-    console / initialCommands :=
-      List("io.isomarcte.errors4s.core._", "io.isomarcte.errors4s.core.syntax.all._")
-        .map(value => s"import $value")
-        .mkString("\n"),
-    crossScalaVersions += scala30,
-    libraryDependencies ++= {
-      if (scalaBinaryVersion.value.startsWith("3")) {
-        Nil
-      } else {
-        List("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
-      }
-    },
-    libraryDependencies ++= List(scalatestG %% scalatestA % scalatestV % Test)
-  )
-
-// circe //
-
-lazy val circe = project
-  .settings(commonSettings, publishSettings)
-  .settings(
-    name := s"${projectName}-circe",
-    console / initialCommands :=
-      List("io.isomarcte.errors4s.core._", "io.isomarcte.errors4s.core.syntax.all._")
-        .map(value => s"import $value")
-        .mkString("\n"),
-    libraryDependencies ++= List(circeG %% circeCoreA % circeV),
-    versionSchemeEnforcerIntialVersion := Some("1.0.0.0")
-  )
-  .dependsOn(core)
 
 // http //
 
@@ -261,99 +200,38 @@ lazy val http = project
         List("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided),
       }
     },
-    libraryDependencies ++= List(scalatestG %% scalatestA % scalatestV % Test),
+    libraryDependencies ++= List(org %% A.errors4sCoreA % V.errors4sCoreV),
+    libraryDependencies ++= List(G.scalametaG %% A.munitA % V.munitV).map(_ % Test),
     console / initialCommands :=
-      List("io.isomarcte.errors4s.core._", "io.isomarcte.errors4s.core.syntax.all._", "io.isomarcte.errors4s.http._")
+      List("org.errors4s.core._", "org.errors4s.core.syntax.all._", "org.errors4s.http._")
         .map(value => s"import $value")
         .mkString("\n"),
-    crossScalaVersions += scala30
+    crossScalaVersions += scala3
   )
-  .dependsOn(core)
 
-// http4s //
+// Docs //
 
-lazy val http4s = project
-  .settings(commonSettings, publishSettings)
-  .settings(
-    name := s"${projectName}-http4s",
-    libraryDependencies ++=
-      List(
-        fs2G        %% fs2CoreA      % fs2V,
-        http4sG     %% http4sCoreA   % http4sV,
-        typelevelG  %% catsCoreA     % catsV,
-        typelevelG  %% catsKernelA   % catsV,
-        typelevelG  %% catsEffectA   % catsEffectV,
-        http4sG     %% http4sClientA % http4sV     % Test,
-        http4sG     %% http4sLawsA   % http4sV     % Test,
-        scalacheckG %% scalacheckA   % scalacheckV % Test
-      ),
-    console / initialCommands :=
-      List(
-        "cats.effect._",
-        "io.isomarcte.errors4s.core._",
-        "io.isomarcte.errors4s.core.syntax.all._",
-        "io.isomarcte.errors4s.http4s._",
-        "io.isomarcte.errors4s.http4s.client._",
-        "org.http4s._",
-        "org.http4s.syntax.all._"
-      ).map(value => s"import $value").mkString("\n")
-  )
-  .dependsOn(core)
-
-// circe //
-
-lazy val `http-circe` = project
-  .settings(commonSettings, publishSettings)
-  .settings(
-    name := s"${projectName}-http-circe",
-    libraryDependencies ++=
-      List(circeG %% circeCoreA % circeV, typelevelG %% catsCoreA % catsV, typelevelG %% catsKernelA % catsV),
-    console / initialCommands :=
-      List(
-        "io.isomarcte.errors4s.core._",
-        "io.isomarcte.errors4s.core.syntax.all._",
-        "io.isomarcte.errors4s.http._",
-        "io.isomarcte.errors4s.http.circe._"
-      ).map(value => s"import $value").mkString("\n")
-  )
-  .dependsOn(http, circe)
-
-// http4s //
-
-lazy val `http4s-circe` = project
-  .settings(commonSettings, publishSettings)
-  .settings(
-    name := s"${projectName}-http4s-circe",
-    libraryDependencies ++=
-      List(
-        chrisDavenportG %% vaultA        % vaultV,
-        circeG          %% circeCoreA    % circeV,
-        fs2G            %% fs2CoreA      % fs2V,
-        http4sG         %% http4sCirceA  % http4sV,
-        http4sG         %% http4sClientA % http4sV,
-        http4sG         %% http4sCoreA   % http4sV,
-        http4sG         %% http4sServerA % http4sV,
-        typelevelG      %% catsCoreA     % catsV,
-        typelevelG      %% catsKernelA   % catsV,
-        typelevelG      %% catsEffectA   % catsEffectV,
-        scalatestG      %% scalatestA    % scalatestV % Test
-      ),
-    console / initialCommands :=
-      List(
-        "io.isomarcte.errors4s.core._",
-        "io.isomarcte.errors4s.core.syntax.all._",
-        "io.isomarcte.errors4s.http._",
-        "io.isomarcte.errors4s.http.circe._",
-        "io.isomarcte.errors4s.http4s.circe._"
-      ).map(value => s"import $value").mkString("\n")
-  )
-  .dependsOn(`http-circe`)
-
-// MDoc //
-
-lazy val docs = project
-  .in(file(s"${projectName}-docs"))
+lazy val docs = (project.in(file(s"${projectName}-docs")))
   .settings(commonSettings)
-  .settings(List(publish / skip := true, name := s"${projectName}-docs"))
-  .dependsOn(core, http, `http-circe`, `http4s-circe`)
+  .settings(
+    name := s"${projectName}-docs",
+    mdocVariables := {
+      val latestRelease: String =
+        // Need to wait for sbt-version-scheme-enforcer 2.1.2.0 for this to
+        // work dynamically.
+        "1.0.0.0-RC0"
+      val scalaBinVer: String = scalaBinaryVersion.value
+
+      Map(
+        "LATEST_RELEASE"       -> latestRelease,
+        "SCALA_BINARY_VERSION" -> scalaBinVer,
+        "SCALADOC_LINK"        -> scaladocLink(scalaBinVer, projectName, latestRelease),
+        "ORG"                  -> org,
+        "PROJECT_NAME"         -> projectName
+      )
+    },
+    mdocIn := file("docs-src"),
+    mdocOut := file("docs")
+  )
+  .dependsOn(http)
   .enablePlugins(MdocPlugin)
