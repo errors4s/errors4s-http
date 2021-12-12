@@ -6,12 +6,12 @@ import _root_.org.errors4s.sbt._
 
 lazy val org           = "org.errors4s"
 lazy val jreVersion    = "17"
-lazy val projectName   = "errors4s-http-7807"
+lazy val projectName   = "errors4s-http"
 lazy val projectUrl    = url(s"https://github.com/errors4s/${projectName}")
-lazy val scala212      = "2.12.14"
+lazy val scala212      = "2.12.15"
 lazy val scala213      = "2.13.7"
-lazy val scala3        = "3.1.0"
-lazy val scalaVersions = Set(scala212, scala213, scala3)
+lazy val scala3        = "3.0.2"
+lazy val scalaVersions = Set(scala212, scala213)
 
 // SBT Command Aliases //
 
@@ -39,6 +39,8 @@ def initialImports(packages: List[String], isScala3: Boolean): String = {
 // Dependency Overrides //
 
 ThisBuild / dependencyOverrides += G.scalametaG % A.semanticdbA % V.semanticdbV cross CrossVersion.full
+
+ThisBuild / evictionErrorLevel := Level.Warn
 
 // Common Settings //
 
@@ -184,7 +186,7 @@ lazy val root = (project in file("."))
       Compile / packageSrc / publishArtifact := false
     )
   )
-  .aggregate(http)
+  .aggregate(http, `http-circe`, `http4s-circe`, http4s)
   .disablePlugins(SbtVersionSchemeEnforcerPlugin)
 
 // http //
@@ -207,6 +209,84 @@ lazy val http = project
         .map(value => s"import $value")
         .mkString("\n"),
     crossScalaVersions += scala3
+  )
+
+lazy val `http-circe` = project
+  .settings(commonSettings, publishSettings)
+  .settings(
+    name := s"${projectName}-http-circe",
+    libraryDependencies ++=
+      List(
+        G.circeG     %% A.circeCoreA         % V.circeV,
+        G.typelevelG %% A.catsCoreA          % V.catsV,
+        G.typelevelG %% A.catsKernelA        % V.catsV,
+        org          %% A.errors4sCoreCirceA % V.errors4sCoreCirceV
+      ),
+    console / initialCommands :=
+      List("org.errors4s.core._", "org.errors4s.core.syntax.all._", "org.errors4s.http._", "org.errors4s.http.circe._")
+        .map(value => s"import $value")
+        .mkString("\n")
+  )
+  .dependsOn(http)
+
+lazy val `http4s-circe` = project
+  .settings(commonSettings, publishSettings)
+  .settings(
+    name := s"${projectName}-http4s-circe",
+    libraryDependencies ++=
+      List(
+        G.circeG     %% A.circeCoreA    % V.circeV,
+        G.fs2G       %% A.fs2CoreA      % V.fs2V,
+        G.http4sG    %% A.http4sCirceA  % V.http4sV,
+        G.http4sG    %% A.http4sClientA % V.http4sV,
+        G.http4sG    %% A.http4sCoreA   % V.http4sV,
+        G.http4sG    %% A.http4sServerA % V.http4sV,
+        G.typelevelG %% A.catsCoreA     % V.catsV,
+        G.typelevelG %% A.catsEffectA   % V.catsEffectV,
+        G.typelevelG %% A.catsKernelA   % V.catsV,
+        G.vaultG     %% A.vaultA        % V.vaultV
+      ),
+    libraryDependencies ++=
+      List(G.scalametaG %% A.munitA % V.munitV, G.typelevelG %% A.munitCatsEffectA % V.munitCatsEffectV).map(_ % Test),
+    console / initialCommands :=
+      List(
+        "org.errors4s.core._",
+        "org.errors4s.core.syntax.all._",
+        "org.errors4s.http._",
+        "org.errors4s.http.circe._",
+        "org.errors4s.http4s.circe._"
+      ).map(value => s"import $value").mkString("\n")
+  )
+  .dependsOn(`http-circe`)
+
+// http4s //
+
+lazy val http4s = project
+  .settings(commonSettings, publishSettings)
+  .settings(
+    name := s"${projectName}-http4s",
+    libraryDependencies ++=
+      List(
+        G.fs2G        %% A.fs2CoreA      % V.fs2V,
+        G.http4sG     %% A.http4sCoreA   % V.http4sV,
+        org           %% A.errors4sCoreA % V.errors4sCoreV,
+        G.typelevelG  %% A.catsCoreA     % V.catsV,
+        G.typelevelG  %% A.catsEffectA   % V.catsEffectV,
+        G.typelevelG  %% A.catsKernelA   % V.catsV,
+        G.http4sG     %% A.http4sClientA % V.http4sV     % Test,
+        G.http4sG     %% A.http4sLawsA   % V.http4sV     % Test,
+        G.scalacheckG %% A.scalacheckA   % V.scalacheckV % Test
+      ),
+    console / initialCommands :=
+      List(
+        "cats.effect._",
+        "org.errors4s.core._",
+        "org.errors4s.core.syntax.all._",
+        "org.errors4s.http4s._",
+        "org.errors4s.http4s.client._",
+        "org.http4s._",
+        "org.http4s.syntax.all._"
+      ).map(value => s"import $value").mkString("\n")
   )
 
 // Docs //
