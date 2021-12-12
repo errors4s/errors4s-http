@@ -10,8 +10,8 @@ lazy val projectName   = "errors4s-http-7807"
 lazy val projectUrl    = url(s"https://github.com/errors4s/${projectName}")
 lazy val scala212      = "2.12.14"
 lazy val scala213      = "2.13.7"
-lazy val scala3        = "3.1.0"
-lazy val scalaVersions = Set(scala212, scala213, scala3)
+lazy val scala3        = "3.0.2"
+lazy val scalaVersions = Set(scala212, scala213)
 
 // SBT Command Aliases //
 
@@ -184,7 +184,7 @@ lazy val root = (project in file("."))
       Compile / packageSrc / publishArtifact := false
     )
   )
-  .aggregate(http)
+  .aggregate(http, `http-circe`)
   .disablePlugins(SbtVersionSchemeEnforcerPlugin)
 
 // http //
@@ -208,6 +208,24 @@ lazy val http = project
         .mkString("\n"),
     crossScalaVersions += scala3
   )
+
+lazy val `http-circe` = project
+  .settings(commonSettings, publishSettings)
+  .settings(
+    name := s"${projectName}-http-circe",
+    libraryDependencies ++=
+      List(
+        G.circeG     %% A.circeCoreA         % V.circeV,
+        G.typelevelG %% A.catsCoreA          % V.catsV,
+        G.typelevelG %% A.catsKernelA        % V.catsV,
+        org          %% A.errors4sCoreCirceA % V.errors4sCoreCirceV
+      ),
+    console / initialCommands :=
+      List("org.errors4s.core._", "org.errors4s.core.syntax.all._", "org.errors4s.http._", "org.errors4s.http.circe._")
+        .map(value => s"import $value")
+        .mkString("\n")
+  )
+  .dependsOn(http)
 
 // Docs //
 
