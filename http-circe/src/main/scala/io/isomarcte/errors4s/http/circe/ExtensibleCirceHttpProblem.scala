@@ -7,10 +7,10 @@ import org.errors4s.http._
 
 trait ExtensibleCirceHttpProblem extends HttpProblem {
 
-  /** Additional fields beyond those defined in [[HttpProblem]].
+  /** Additional fields beyond those defined in `HttpProblem`.
     *
-    * @note This [[io.circe.JsonObject]] should ''not'' contain keys which
-    *       will conflict with the canonical fields in [[HttpProblem]].
+    * @note This `io.circe.JsonObject` should ''not'' contain keys which
+    *       will conflict with the canonical fields in `HttpProblem`.
     */
   def additionalFields: JsonObject = JsonObject.empty
 }

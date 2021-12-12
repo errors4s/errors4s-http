@@ -10,10 +10,10 @@ import org.errors4s.http.circe.implicits.httpStatusCodec
 
 trait ExtensibleCirceHttpError extends HttpError {
 
-  /** Additional fields beyond those defined in [[HttpError]].
+  /** Additional fields beyond those defined in `HttpError`.
     *
-    * @note This [[io.circe.JsonObject]] should ''not'' contain keys which
-    *       will conflict with the canonical fields in [[HttpError]].
+    * @note This `io.circe.JsonObject` should ''not'' contain keys which
+    *       will conflict with the canonical fields in `HttpError`.
     */
   def additionalFields: JsonObject = JsonObject.empty
 }
