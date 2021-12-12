@@ -30,7 +30,7 @@ object GAVs {
     lazy val betterMonadicForV: String = "0.3.1"
     lazy val catsV: String             = "2.6.1"
     lazy val disciplineMunitV: String  = "1.0.9"
-    lazy val errors4sCoreV: String     = "1.0.0.0-RC2"
+    lazy val errors4sCoreV: String     = "1.0.0.0-RC3"
     lazy val kindProjectorV: String    = "0.13.2"
     lazy val munitV: String            = "0.7.29"
     lazy val organizeImportsV: String  = "0.4.4"
