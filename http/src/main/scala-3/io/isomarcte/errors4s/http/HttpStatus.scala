@@ -68,7 +68,7 @@ object HttpStatus {
   private def isValidImpl(expr: Expr[Int])(using Quotes): Expr[Boolean] = {
     import quotes.reflect.report
     expr.value.fold(
-      report.errorAndAbort("Int value is not a compile time literal constant. HttpStatus.apply can only be used with compile time literal Int values >= 100 && < 600.")
+      report.throwError("Int value is not a compile time literal constant. HttpStatus.apply can only be used with compile time literal Int values >= 100 && < 600.")
     )((value: Int) =>
       Expr((value >= 100) && (value < 600))
     )
