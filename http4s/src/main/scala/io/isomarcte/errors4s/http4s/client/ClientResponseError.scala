@@ -13,16 +13,20 @@ import org.http4s._
   * `org.http4s.client.Client.expectOptionOr` methods of a http4s Client.
   *
   * There are ''many'' different factory methods one may use to construct a
-  * [[ClientResponseError]]. This is because depending on your use case, you
-  * may or may not have/want to include the request or you may or may not want
-  * to use the default redaction configuration. Some good options to use if
-  * you aren't really sure what you want are
-  * [[ClientResponseError#fromRequestResponseWithConfig]] and
-  * [[ClientResponseError#fromRequestResponseWithConfigWithBody]] in the
-  * companion object from `ClientResponseError`. They provide a good trade off
-  * of ease of use while still collecting lots of error information. If you
-  * wish to merely treat the error body as text, you might consider
-  * [[ClientResponseErrorTextBody#fromRequestResponseWithConfig]] as well.
+  * [[org.errors4s.http4s.client.ClientResponseError]]. This is because
+  * depending on your use case, you may or may not have/want to include the
+  * request or you may or may not want to use the default redaction
+  * configuration. Some good options to use if you aren't really sure what you
+  * want are
+  * [[org.errors4s.http4s.client.ClientResponseError#fromRequestResponseWithConfig]]
+  * and
+  * [[org.errors4s.http4s.client.ClientResponseError#fromRequestResponseWithConfigWithBody]]
+  * in the companion object from `ClientResponseError`. They provide a good
+  * trade off of ease of use while still collecting lots of error
+  * information. If you wish to merely treat the error body as text, you might
+  * consider
+  * [[org.errors4s.http4s.client.ClientResponseErrorTextBody#fromRequestResponseWithConfigSync]]
+  * as well.
   *
   * @see [[https://http4s.org/v0.21/api/org/http4s/client/client Http4s Client]]
   */
@@ -147,8 +151,7 @@ object ClientResponseError {
     *
     * @note Unless you have very specialized use cases, you should ''not'' use
     *       this constructor and prefer the other factory methods in either
-    *       [[ClientResponseError]], [[ClientResponseErrorTextBody]], or
-    *       [[ClientResponseErrorNoBody]].
+    *       [[ClientResponseError]] or [[ClientResponseErrorTextBody]].
     *
     * @param status The HTTP status of the response which generated this
     *               error.
