@@ -16,7 +16,7 @@ import org.http4s.headers._
   */
 object PassthroughCirceHttpError {
   private def shouldAttemptDecode(headers: Headers): Boolean =
-    headers.get(`Content-Type`).fold(false)(ct => ct.mediaType === MediaType.application.`problem+json`)
+    headers.get[`Content-Type`].fold(false)(ct => ct.mediaType === MediaType.application.`problem+json`)
 
   /** Middleware which looks for RFC 7807 errors by discriminating on the
     * `Content-Type` header. If that header is `application/problem+json`,

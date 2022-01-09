@@ -3,6 +3,7 @@ package org.errors4s.http4s
 import cats.syntax.all._
 import org.errors4s.http4s.headers._
 import org.http4s._
+import org.typelevel.ci._
 import scala.annotation.nowarn
 
 /** This type describes how to redact a request/response interaction when
@@ -109,14 +110,14 @@ object RedactionConfiguration {
 
   // Newtype related private functions and values //
 
-  private[this] def headerInAllowedHeaders(value: Header): Boolean =
-    AllowedHeaders.defaultAllowHeaders.contains(value.name)
+  private[this] def headerInAllowedHeaders(value: CIString): Boolean =
+    AllowedHeaders.defaultAllowHeaders.contains(value)
 
   // Newtypes, because a lot of these functions are of the same type.
 
   /** A newtype for a function to redact request header values.
     */
-  final case class RedactRequestHeader(value: Header => Header) extends AnyVal
+  final case class RedactRequestHeader(value: Header.Raw => Header.Raw) extends AnyVal
 
   object RedactRequestHeader {
 
@@ -125,7 +126,7 @@ object RedactionConfiguration {
       * [[org.errors4s.http4s.headers.AllowedHeaders#defaultAllowHeaders]].
       */
     val default: RedactRequestHeader = RedactRequestHeader(value =>
-      if (headerInAllowedHeaders(value)) {
+      if (headerInAllowedHeaders(value.name)) {
         value
       } else {
         Header.Raw(value.name, defaultRedactValue(value.value))
@@ -143,7 +144,7 @@ object RedactionConfiguration {
 
   /** A newtype for a function to redact response header values.
     */
-  final case class RedactResponseHeader(value: Header => Header) extends AnyVal
+  final case class RedactResponseHeader(value: Header.Raw => Header.Raw) extends AnyVal
 
   object RedactResponseHeader {
 
@@ -152,7 +153,7 @@ object RedactionConfiguration {
       * [[org.errors4s.http4s.headers.AllowedHeaders#defaultAllowHeaders]].
       */
     val default: RedactResponseHeader = RedactResponseHeader(value =>
-      if (headerInAllowedHeaders(value)) {
+      if (headerInAllowedHeaders(value.name)) {
         value
       } else {
         Header.Raw(value.name, defaultRedactValue(value.value))
@@ -226,7 +227,7 @@ object RedactionConfiguration {
       */
     def fromHeaders(headers: Headers, redact: RedactRequestHeader): RedactedRequestHeaders =
       RedactedRequestHeadersImpl(
-        value = headers.foldMap(header => Headers.of(redact.value(header))),
+        value = Headers(headers.headers.foldMap(header => List(redact.value(header)))),
         unredacted = headers
       )
 
@@ -282,7 +283,7 @@ object RedactionConfiguration {
 
     def fromHeaders(headers: Headers, redact: RedactResponseHeader): RedactedResponseHeaders =
       RedactedResponseHeadersImpl(
-        value = headers.foldMap(header => Headers.of(redact.value(header))),
+        value = Headers(headers.headers.foldMap(header => List(redact.value(header)))),
         unredacted = headers
       )
 

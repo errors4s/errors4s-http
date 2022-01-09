@@ -67,7 +67,7 @@ final class PassthroughCirceHttpErrorTest extends CatsEffectSuite {
         val responseBody: String = "Body"
         val response: Response[SyncIO] = Response(
           status = Status.Ok,
-          headers = Headers.of(`Content-Type`(MediaType.application.`problem+json`)),
+          headers = Headers.apply(`Content-Type`(MediaType.application.`problem+json`)),
           body = Stream
             .evalUnChunk(ref.update(_ + 1) *> SyncIO.pure(Chunk.bytes(responseBody.getBytes(StandardCharsets.UTF_8))))
         )
@@ -140,7 +140,7 @@ object PassthroughCirceHttpErrorTest {
   private lazy val testRequest: Request[SyncIO] = Request()
 
   private lazy val responseWithContentType: Response[SyncIO] = Response(headers =
-    Headers.of(`Content-Type`(MediaType.application.`problem+json`))
+    Headers(`Content-Type`(MediaType.application.`problem+json`))
   )
 
   private def constClientF(response: SyncIO[Response[SyncIO]]): Client[SyncIO] =

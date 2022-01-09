@@ -2,7 +2,7 @@ package org.errors4s.http4s.headers
 
 import cats.data._
 import cats.syntax.all._
-import org.http4s.util.CaseInsensitiveString
+import org.typelevel.ci._
 
 /** Headers which are known to have safe values for logging.
   *
@@ -107,7 +107,7 @@ object AllowedHeaders {
   /** The set of headers which are not redacted when using the default
     * [[org.errors4s.http4s.RedactionConfiguration#default]].
     */
-  val defaultAllowHeaders: NonEmptySet[CaseInsensitiveString] =
+  val defaultAllowHeaders: NonEmptySet[CIString] =
     (
       defaultAllowAuthenticationHeaders ++ defaultAllowCachingHeaders ++ defaultAllowClientHintsHeaders ++
         defaultAllowConditionalsHeaders ++ defaultAllowConnectionManagementHeaders ++
@@ -117,5 +117,5 @@ object AllowedHeaders {
         defaultAllowResponseContextHeaders ++ defaultAllowRangeRequestsHeaders ++ defaultAllowSecurityHeaders ++
         defaultAllowHPKPHeaders ++ defaultAllowFetchMetadataRequestHeaders ++ defaultAllowTransferCodingHeaders ++
         defaultAllowOtherHeaders
-    ).map(value => CaseInsensitiveString(value))
+    ).map(value => CIString(value))
 }

@@ -30,7 +30,7 @@ final class CirceHttpErrorToResponseTest extends CatsEffectSuite {
         _.fold(SyncIO[Unit](fail("No Response"))) { resp =>
           SyncIO(assertEquals(resp.status.code, 501)) *>
             SyncIO(
-              assertEquals(resp.headers.get(`Content-Type`), Some(`Content-Type`(MediaType.application.`problem+json`)))
+              assertEquals(resp.headers.get[`Content-Type`], Some(`Content-Type`(MediaType.application.`problem+json`)))
             ) *> resp.as[ExtensibleCirceHttpError].flatMap(value => SyncIO(assertEquals(value, error)))
         }
       )
@@ -49,7 +49,7 @@ final class CirceHttpErrorToResponseTest extends CatsEffectSuite {
         _.fold(SyncIO[Unit](fail("No Response"))) { resp =>
           SyncIO(assertEquals(resp.status.code, 501)) *>
             SyncIO(
-              assertEquals(resp.headers.get(`Content-Type`), Some(`Content-Type`(MediaType.application.`problem+json`)))
+              assertEquals(resp.headers.get[`Content-Type`], Some(`Content-Type`(MediaType.application.`problem+json`)))
             ) *> resp.as[ExtensibleCirceHttpProblem].flatMap(value => SyncIO(assertEquals(value, error)))
         }
       )

@@ -1,6 +1,7 @@
 package org.errors4s.http4s
 
 import cats.effect._
+import cats.syntax.all._
 import io.circe._
 import io.circe.syntax._
 import org.errors4s.http.circe._
@@ -47,12 +48,15 @@ package object circe {
     *       `ExtensibleCirceHttpError`, otherwise they will not be detected.
     */
   def httpErrorAsResponse[F[_]](e: HttpError)(implicit F: Sync[F]): F[Response[F]] =
-    e match {
-      case e: ExtensibleCirceHttpError =>
-        F.pure(Response(status = Status(e.status.value)).withEntity(e)(circeHttpErrorJsonEntityEncoder[F]))
-      case _ =>
-        F.pure(Response(status = Status(e.status.value)).withEntity(e)(httpErrorJsonEntityEncoder[F]))
-    }
+    F.fromEither(Status.fromInt(e.status.value))
+      .flatMap(status =>
+        e match {
+          case e: ExtensibleCirceHttpError =>
+            F.pure(Response(status = status).withEntity(e)(circeHttpErrorJsonEntityEncoder[F]))
+          case _ =>
+            F.pure(Response(status = status).withEntity(e)(httpErrorJsonEntityEncoder[F]))
+        }
+      )
 
   /** Encode a `HttpProblem` as a http4s `Response.
     *
@@ -61,16 +65,15 @@ package object circe {
     *       `ExtensibleCirceHttpProblem`, otherwise they will not be detected.
     */
   def httpProblemAsResponse[F[_]](e: HttpProblem)(implicit F: Sync[F]): F[Response[F]] =
-    e match {
-      case e: ExtensibleCirceHttpProblem =>
-        F.pure(
-          Response(status = e.status.fold(Status.InternalServerError)(value => Status(value)))
-            .withEntity(e)(circeHttpProblemJsonEntityEncoder[F])
-        )
-      case e: HttpProblem =>
-        F.pure(
-          Response(status = e.status.fold(Status.InternalServerError)(value => Status(value)))
-            .withEntity(e)(httpProblemJsonEntityEncoder[F])
-        )
-    }
+    F.fromEither(
+        e.status.fold(Right(Status.InternalServerError): Either[ParseFailure, Status])(value => Status.fromInt(value))
+      )
+      .flatMap(status =>
+        e match {
+          case e: ExtensibleCirceHttpProblem =>
+            F.pure(Response(status = status).withEntity(e)(circeHttpProblemJsonEntityEncoder[F]))
+          case e: HttpProblem =>
+            F.pure(Response(status = status).withEntity(e)(httpProblemJsonEntityEncoder[F]))
+        }
+      )
 }
