@@ -108,6 +108,91 @@ object RedactionConfiguration {
         value.copy(redactUriQueryParam = f)
     }
 
+  /** Do not redact headers with names appearing in the given sets and query
+    * parameter keys appearing in the given set. If the header or query
+    * parameter name is not in the given set, then fallback to the
+    * [[#default]].
+    *
+    * @note No query parameter keys will be redacted, just values.
+    *
+    * @note Unlike HTTP header values, URI query parameter keys technically
+    *       ''are'' case sensitive, but usually they are treated as though
+    *       they are case insensitive. If you want case sensitive redaction,
+    *       then do not use this method.
+    */
+  def allowListOrDefaultCI(
+    allowedRequestHeaderNames: Set[CIString],
+    allowedResponseHeaderNames: Set[CIString],
+    allowedQueryParameterKeys: Set[CIString]
+  ): RedactionConfiguration =
+    default
+      .withRedactRequestHeader(RedactRequestHeader.allowListOrDefaultCI(allowedRequestHeaderNames))
+      .withRedactResponseHeader(RedactResponseHeader.allowListOrDefaultCI(allowedResponseHeaderNames))
+      .withRedactUriQueryParam(RedactUriQueryParam.allowListOrDefaultCI(allowedQueryParameterKeys))
+
+  /** Do not redact headers with names appearing in the given sets and query
+    * parameter keys appearing in the given set. If the header or query
+    * parameter name is not in the given set, then fallback to the
+    * [[#default]].
+    *
+    * @note No query parameter keys will be redacted, just values.
+    *
+    * @note Unlike HTTP header values, URI query parameter keys technically
+    *       ''are'' case sensitive, but usually they are treated as though
+    *       they are case insensitive. If you want case sensitive redaction,
+    *       then do not use this method.
+    */
+  def allowListOrDefault(
+    allowedRequestHeaderNames: Set[String],
+    allowedResponseHeaderNames: Set[String],
+    allowedQueryParameterKeys: Set[String]
+  ): RedactionConfiguration =
+    allowListOrDefaultCI(
+      allowedRequestHeaderNames.map(CIString.apply),
+      allowedResponseHeaderNames.map(CIString.apply),
+      allowedQueryParameterKeys.map(CIString.apply)
+    )
+
+  /** Do not redact headers with names appearing in the given sets and query
+    * parameter keys appearing in the given set. If the header or query
+    * parameter name is not in the given set, then fallback to the
+    * [[#default]].
+    *
+    * @note The same set of header names is used for both request and response
+    *       headers.
+    *
+    * @note No query parameter keys will be redacted, just values.
+    *
+    * @note Unlike HTTP header values, URI query parameter keys technically
+    *       ''are'' case sensitive, but usually they are treated as though
+    *       they are case insensitive. If you want case sensitive redaction,
+    *       then do not use this method.
+    */
+  def allowListOrDefaultCI(
+    allowedHeaderNames: Set[CIString],
+    allowedQueryParameterKeys: Set[CIString]
+  ): RedactionConfiguration = allowListOrDefaultCI(allowedHeaderNames, allowedHeaderNames, allowedQueryParameterKeys)
+
+  /** Do not redact headers with names appearing in the given sets and query
+    * parameter keys appearing in the given set. If the header or query
+    * parameter name is not in the given set, then fallback to the
+    * [[#default]].
+    *
+    * @note The same set of header names is used for both request and response
+    *       headers.
+    *
+    * @note No query parameter keys will be redacted, just values.
+    *
+    * @note Unlike HTTP header values, URI query parameter keys technically
+    *       ''are'' case sensitive, but usually they are treated as though
+    *       they are case insensitive. If you want case sensitive redaction,
+    *       then do not use this method.
+    */
+  def allowListOrDefault(
+    allowedHeaderNames: Set[String],
+    allowedQueryParameterKeys: Set[String]
+  ): RedactionConfiguration = allowListOrDefault(allowedHeaderNames, allowedHeaderNames, allowedQueryParameterKeys)
+
   // Newtype related private functions and values //
 
   private[this] def headerInAllowedHeaders(value: CIString): Boolean =
@@ -140,6 +225,54 @@ object RedactionConfiguration {
       * the uri query parameter values redacted.
       */
     val unredacted: RedactRequestHeader = RedactRequestHeader(identity)
+
+    /** Redact headers using the given partial function falling back to an
+      * alternative redaction method.
+      */
+    def orElse(pf: PartialFunction[Header.Raw, Header.Raw], fallback: RedactRequestHeader): RedactRequestHeader =
+      RedactRequestHeader(header => pf.applyOrElse(header, fallback.value(_)))
+
+    /** Redact headers using the given partial function falling back to the
+      * default redaction method.
+      */
+    def orElseDefault(pf: PartialFunction[Header.Raw, Header.Raw]): RedactRequestHeader = orElse(pf, default)
+
+    /** Do not redact headers with names appearing in the given set, but redact
+      * all other headers.
+      */
+    def allowListCI(headerNames: Set[CIString]): RedactRequestHeader =
+      RedactRequestHeader(header =>
+        if (headerNames.contains(header.name)) {
+          header
+        } else {
+          Header.Raw(header.name, defaultRedactValue(header.value))
+        }
+      )
+
+    /** Do not redact headers with names appearing in the given set, but redact
+      * all other headers.
+      */
+    def allowList(headerNames: Set[String]): RedactRequestHeader = allowListCI(headerNames.map(CIString.apply))
+
+    /** Do not redact headers with names appearing in the given set. If the header
+      * name is not in the given set, then fallback to the [[#default]]
+      * redaction method.
+      */
+    def allowListOrDefaultCI(headerNames: Set[CIString]): RedactRequestHeader =
+      RedactRequestHeader(header =>
+        if (headerNames.contains(header.name)) {
+          header
+        } else {
+          default.value(header)
+        }
+      )
+
+    /** Do not redact headers with names appearing in the given set. If the header
+      * name is not in the given set, then fallback to the [[#default]]
+      * redaction method.
+      */
+    def allowListOrDefault(headerNames: Set[String]): RedactRequestHeader =
+      allowListOrDefaultCI(headerNames.map(CIString.apply))
   }
 
   /** A newtype for a function to redact response header values.
@@ -167,6 +300,54 @@ object RedactionConfiguration {
       * the uri query parameter values redacted.
       */
     val unredacted: RedactResponseHeader = RedactResponseHeader(identity)
+
+    /** Redact headers using the given partial function falling back to an
+      * alternative redaction method.
+      */
+    def orElse(pf: PartialFunction[Header.Raw, Header.Raw], fallback: RedactResponseHeader): RedactResponseHeader =
+      RedactResponseHeader(header => pf.applyOrElse(header, fallback.value(_)))
+
+    /** Redact headers using the given partial function falling back to the
+      * default redaction method.
+      */
+    def orElseDefault(pf: PartialFunction[Header.Raw, Header.Raw]): RedactResponseHeader = orElse(pf, default)
+
+    /** Do not redact headers with names appearing in the given set, but redact
+      * all other headers.
+      */
+    def allowListCI(headerNames: Set[CIString]): RedactResponseHeader =
+      RedactResponseHeader(header =>
+        if (headerNames.contains(header.name)) {
+          header
+        } else {
+          Header.Raw(header.name, defaultRedactValue(header.value))
+        }
+      )
+
+    /** Do not redact headers with names appearing in the given set, but redact
+      * all other headers.
+      */
+    def allowList(headerNames: Set[String]): RedactResponseHeader = allowListCI(headerNames.map(CIString.apply))
+
+    /** Do not redact headers with names appearing in the given set. If the header
+      * name is not in the given set, then fallback to the [[#default]]
+      * redaction method.
+      */
+    def allowListOrDefaultCI(headerNames: Set[CIString]): RedactResponseHeader =
+      RedactResponseHeader(header =>
+        if (headerNames.contains(header.name)) {
+          header
+        } else {
+          default.value(header)
+        }
+      )
+
+    /** Do not redact headers with names appearing in the given set. If the header
+      * name is not in the given set, then fallback to the [[#default]]
+      * redaction method.
+      */
+    def allowListOrDefault(headerNames: Set[String]): RedactResponseHeader =
+      allowListOrDefaultCI(headerNames.map(CIString.apply))
   }
 
   /** A newtype for a function to redact uri query parameter keys and values.
@@ -192,6 +373,92 @@ object RedactionConfiguration {
       * the request values redacted.
       */
     val unredacted: RedactUriQueryParam = RedactUriQueryParam((key, value) => (key, value))
+
+    /** Redact query parameter using the given partial function falling back to an
+      * alternative redaction method.
+      */
+    def orElse(
+      pf: PartialFunction[(String, Option[String]), (String, Option[String])],
+      fallback: RedactUriQueryParam
+    ): RedactUriQueryParam =
+      RedactUriQueryParam((key, value) =>
+        pf.applyOrElse(key -> value, (kv: (String, Option[String])) => fallback.value(kv._1, kv._2))
+      )
+
+    /** Redact query parameter using the given partial function falling back to
+      * the default redaction method.
+      */
+    def orElseDefault(pf: PartialFunction[(String, Option[String]), (String, Option[String])]): RedactUriQueryParam =
+      orElse(pf, default)
+
+    /** Do not redact query parameter values with the case insensitive name
+      * appearing in the given set, but redact all other query parameter
+      * values.
+      *
+      * @note No query parameter keys will be redacted, just values.
+      *
+      * @note Unlike HTTP header values, URI query parameter keys technically
+      *       ''are'' case sensitive, but usually they are treated as though
+      *       they are case insensitive. If you want case sensitive redaction,
+      *       then do not use this method.
+      */
+    def allowListCI(queryParamKeys: Set[CIString]): RedactUriQueryParam =
+      RedactUriQueryParam {
+        case (key, Some(value)) if queryParamKeys.contains(CIString(key)) =>
+          key -> Some(value)
+        case (key, Some(value)) =>
+          key -> Some(defaultRedactValue(value))
+        case (key, _) =>
+          key -> None
+      }
+
+    /** Do not redact query parameter values with the case insensitive name
+      * appearing in the given set, but redact all other query parameter
+      * values.
+      *
+      * @note No query parameter keys will be redacted, just values.
+      *
+      * @note Unlike HTTP header values, URI query parameter keys technically
+      *       ''are'' case sensitive, but usually they are treated as though
+      *       they are case insensitive. If you want case sensitive redaction,
+      *       then do not use this method.
+      */
+    def allowList(queryParamKeys: Set[String]): RedactUriQueryParam = allowListCI(queryParamKeys.map(CIString.apply))
+
+    /** Do not redact query parameter values with a case insensitive name
+      * appearing in the given set. If the query parameter key name is not in
+      * the given set, then fallback to the [[#default]] redaction method.
+      *
+      * @note No query parameter keys will be redacted, just values.
+      *
+      * @note Unlike HTTP header values, URI query parameter keys technically
+      *       ''are'' case sensitive, but usually they are treated as though
+      *       they are case insensitive. If you want case sensitive redaction,
+      *       then do not use this method.
+      */
+    def allowListOrDefaultCI(queryParamKeys: Set[CIString]): RedactUriQueryParam =
+      RedactUriQueryParam {
+        case (key, Some(value)) if queryParamKeys.contains(CIString(value)) =>
+          key -> Some(value)
+        case (key, Some(value)) =>
+          key -> Some(defaultRedactValue(value))
+        case (key, _) =>
+          key -> None
+      }
+
+    /** Do not redact query parameter values with a case insensitive name
+      * appearing in the given set. If the query parameter key name is not in
+      * the given set, then fallback to the [[#default]] redaction method.
+      *
+      * @note No query parameter keys will be redacted, just values.
+      *
+      * @note Unlike HTTP header values, URI query parameter keys technically
+      *       ''are'' case sensitive, but usually they are treated as though
+      *       they are case insensitive. If you want case sensitive redaction,
+      *       then do not use this method.
+      */
+    def allowListOrDefault(queryParamKeys: Set[String]): RedactUriQueryParam =
+      allowListOrDefaultCI(queryParamKeys.map(CIString.apply))
   }
 
   // Redacted newtypes, these are the results of applying the Redact newtype functions
@@ -281,25 +548,55 @@ object RedactionConfiguration {
       override val unredacted: Headers
     ) extends RedactedResponseHeaders
 
+    /** Create a [[RedactedResponseHeaders]] value from unredacted headers and a
+      * [[RedactResponseHeader]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromHeaders(headers: Headers, redact: RedactResponseHeader): RedactedResponseHeaders =
       RedactedResponseHeadersImpl(
         value = Headers(headers.headers.foldMap(header => List(redact.value(header))): List[Header.Raw]),
         unredacted = headers
       )
 
+    /** Create a [[RedactedResponseHeaders]] value from a `Response` value.
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromResponse[F[_]](response: Response[F], redact: RedactResponseHeader): RedactedResponseHeaders =
       fromHeaders(response.headers, redact)
 
+    /** Create a [[RedactedResponseHeaders]] value from unredacted request headers
+      * and a [[RedactionConfiguration]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromHeadersAndConfig(headers: Headers, config: RedactionConfiguration): RedactedResponseHeaders =
       fromHeaders(headers, config.redactResponseHeader)
 
+    /** Create a [[RedactedResponseHeaders]] value from a `Response` value
+      * and a [[RedactionConfiguration]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromResponseAndConfig[F[_]](response: Response[F], config: RedactionConfiguration): RedactedResponseHeaders =
       fromHeaders(response.headers, config.redactResponseHeader)
   }
 
+  /** Uri values which been redacted.
+    */
   sealed trait RedactedUri {
+
+    /** The redacted Uri.
+      */
     def value: Uri
 
+    /** The original, unredacted, Uri.
+      */
     def unredacted: Uri
 
     // final //
@@ -323,13 +620,37 @@ object RedactionConfiguration {
         )
     }
 
+    /** Create a [[RedactedUri]] value from an unredacted Uri and a
+      * [[RedactUriQueryParam]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromUri(uri: Uri, redact: RedactUriQueryParam): RedactedUri = RedactedUriImpl(uri, redact)
 
+    /** Create a [[RedactedUri]] value from `Request` and a
+      * [[RedactUriQueryParam]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromRequest[F[_]](request: Request[F], redact: RedactUriQueryParam): RedactedUri = fromUri(request.uri, redact)
 
+    /** Create a [[RedactedUri]] value from a Uri and a
+      * [[RedactionConfiguration]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromUriAndConfig(uri: Uri, config: RedactionConfiguration): RedactedUri =
       fromUri(uri, config.redactUriQueryParam)
 
+    /** Create a [[RedactedUri]] value from a `Request` and a
+      * [[RedactionConfiguration]].
+      *
+      * @note Normally this is done for you when generating a
+      *       [[org.errors4s.http4s.client.ClientResponseError]].
+      */
     def fromRequestAndConfig[F[_]](request: Request[F], config: RedactionConfiguration): RedactedUri =
       fromUri(request.uri, config.redactUriQueryParam)
   }
@@ -337,8 +658,12 @@ object RedactionConfiguration {
   // General utility functions, exposed so users have an easy time modifying
   // the default behavior.
 
+  /** The default function used to redact a value. It redacts all values with
+    * the string "<REDACTED>".
+    */
   def defaultRedactValue[A](value: A): String = redactWithConstantString[A]("<REDACTED>")(value)
 
+  /** Redact a value using a constant string. */
   def redactWithConstantString[A](constant: String)(
     @nowarn
     value: A

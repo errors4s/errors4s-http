@@ -4,21 +4,22 @@ import _root_.org.errors4s.sbt._
 
 // Constants //
 
-lazy val org           = "org.errors4s"
-lazy val jreVersion    = "17"
-lazy val projectName   = "errors4s-http"
-lazy val projectUrl    = url(s"https://github.com/errors4s/${projectName}")
-lazy val scala212      = "2.12.15"
-lazy val scala213      = "2.13.7"
-lazy val scala31       = "3.1.0"
-lazy val scalaVersions = Set(scala212, scala213, scala31)
+lazy val org             = "org.errors4s"
+lazy val jreVersion      = "17"
+lazy val projectBaseName = "errors4s"
+lazy val projectName     = s"${projectBaseName}-http"
+lazy val projectUrl      = url(s"https://github.com/errors4s/${projectName}")
+lazy val scala212        = "2.12.15"
+lazy val scala213        = "2.13.7"
+lazy val scala31         = "3.1.0"
+lazy val scalaVersions   = Set(scala212, scala213, scala31)
 
 // SBT Command Aliases //
 
 // Usually run before making a PR
 addCommandAlias(
   "full_build",
-  s";+clean;githubWorkflowGenerate;+test;+test:doc;+versionSchemeEnforcerCheck;++${scala213};scalafmtAll;scalafmtSbt;scalafixAll;docs/mdoc"
+  s";+clean;githubWorkflowGenerate;undeclaredCompileDependenciesTest;unusedCompileDependenciesTest;+test;+test:doc;+versionSchemeEnforcerCheck;++${scala213};scalafmtAll;scalafmtSbt;scalafixAll;docs/mdoc"
 )
 
 // Functions //
@@ -63,7 +64,17 @@ ThisBuild / githubWorkflowPublishTargetBranches := Nil
 ThisBuild / githubWorkflowOSes := Set("macos-latest", "ubuntu-latest").toList
 ThisBuild / githubWorkflowJavaVersions :=
   Set("17", "11", "8").map(version => JavaSpec(JavaSpec.Distribution.Temurin, version)).toList
-ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("versionSchemeEnforcerCheck", "Test / doc")))
+ThisBuild / githubWorkflowBuild :=
+  List(
+    WorkflowStep.Sbt(
+      List(
+        "versionSchemeEnforcerCheck",
+        "Test / doc",
+        "undeclaredCompileDependenciesTest",
+        "unusedCompileDependenciesTest"
+      )
+    )
+  )
 
 // Doc Settings
 
@@ -194,12 +205,13 @@ lazy val root = (project in file("."))
 lazy val http = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http",
+    name := s"${projectBaseName}-http",
     libraryDependencies ++= {
-      if (isScala3(scalaBinaryVersion.value)) {
-        Nil
-      } else {
+      if (scalaBinaryVersion.value == "2.13") {
+        // Apparently this is only needed on 2.13 /shrug
         List("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided),
+      } else {
+        Nil
       }
     },
     libraryDependencies ++= List(org %% A.errors4sCoreA % V.errors4sCoreV),
@@ -213,12 +225,13 @@ lazy val http = project
 lazy val `http-circe` = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http-circe",
+    name := s"${projectBaseName}-http-circe",
     libraryDependencies ++=
       List(
         G.circeG     %% A.circeCoreA         % V.circeV,
         G.typelevelG %% A.catsCoreA          % V.catsV,
         G.typelevelG %% A.catsKernelA        % V.catsV,
+        org          %% A.errors4sCoreA      % V.errors4sCoreV,
         org          %% A.errors4sCoreCirceA % V.errors4sCoreCirceV
       ),
     console / initialCommands :=
@@ -231,19 +244,20 @@ lazy val `http-circe` = project
 lazy val `http4s-circe` = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http4s-circe",
+    name := s"${projectBaseName}-http4s-circe",
     libraryDependencies ++=
       List(
-        G.circeG     %% A.circeCoreA    % V.circeV,
-        G.fs2G       %% A.fs2CoreA      % V.fs2V,
-        G.http4sG    %% A.http4sCirceA  % V.http4sV,
-        G.http4sG    %% A.http4sClientA % V.http4sV,
-        G.http4sG    %% A.http4sCoreA   % V.http4sV,
-        G.http4sG    %% A.http4sServerA % V.http4sV,
-        G.typelevelG %% A.catsCoreA     % V.catsV,
-        G.typelevelG %% A.catsEffectA   % V.catsEffectV,
-        G.typelevelG %% A.catsKernelA   % V.catsV,
-        G.typelevelG %% A.vaultA        % V.vaultV
+        G.circeG     %% A.circeCoreA        % V.circeV,
+        G.fs2G       %% A.fs2CoreA          % V.fs2V,
+        G.http4sG    %% A.http4sCirceA      % V.http4sV,
+        G.http4sG    %% A.http4sClientA     % V.http4sV,
+        G.http4sG    %% A.http4sCoreA       % V.http4sV,
+        G.http4sG    %% A.http4sServerA     % V.http4sV,
+        G.typelevelG %% A.catsCoreA         % V.catsV,
+        G.typelevelG %% A.catsEffectA       % V.catsEffectV,
+        G.typelevelG %% A.catsEffectKernelA % V.catsEffectV,
+        G.typelevelG %% A.catsKernelA       % V.catsV,
+        G.typelevelG %% A.vaultA            % V.vaultV
       ),
     libraryDependencies ++=
       List(G.scalametaG %% A.munitA % V.munitV, G.typelevelG %% A.munitCatsEffectA % V.munitCatsEffectV).map(_ % Test),
@@ -263,18 +277,19 @@ lazy val `http4s-circe` = project
 lazy val http4s = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http4s",
+    name := s"${projectBaseName}-http4s",
     libraryDependencies ++=
       List(
-        G.fs2G        %% A.fs2CoreA      % V.fs2V,
-        G.http4sG     %% A.http4sCoreA   % V.http4sV,
-        org           %% A.errors4sCoreA % V.errors4sCoreV,
-        G.typelevelG  %% A.catsCoreA     % V.catsV,
-        G.typelevelG  %% A.catsEffectA   % V.catsEffectV,
-        G.typelevelG  %% A.catsKernelA   % V.catsV,
-        G.http4sG     %% A.http4sClientA % V.http4sV     % Test,
-        G.http4sG     %% A.http4sLawsA   % V.http4sV     % Test,
-        G.scalacheckG %% A.scalacheckA   % V.scalacheckV % Test
+        G.http4sG     %% A.http4sCoreA       % V.http4sV,
+        G.typelevelG  %% A.caseInsensitiveA  % V.caseInsensitiveV,
+        G.typelevelG  %% A.catsCoreA         % V.catsV,
+        G.typelevelG  %% A.catsEffectA       % V.catsEffectV,
+        G.typelevelG  %% A.catsEffectKernelA % V.catsEffectV,
+        G.typelevelG  %% A.catsKernelA       % V.catsV,
+        org           %% A.errors4sCoreA     % V.errors4sCoreV,
+        G.http4sG     %% A.http4sClientA     % V.http4sV     % Test,
+        G.http4sG     %% A.http4sLawsA       % V.http4sV     % Test,
+        G.scalacheckG %% A.scalacheckA       % V.scalacheckV % Test
       ),
     console / initialCommands :=
       List(
