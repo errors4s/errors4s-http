@@ -4,14 +4,15 @@ import _root_.org.errors4s.sbt._
 
 // Constants //
 
-lazy val org           = "org.errors4s"
-lazy val jreVersion    = "17"
-lazy val projectName   = "errors4s-http"
-lazy val projectUrl    = url(s"https://github.com/errors4s/${projectName}")
-lazy val scala212      = "2.12.15"
-lazy val scala213      = "2.13.7"
-lazy val scala30        = "3.0.2"
-lazy val scalaVersions = Set(scala212, scala213, scala30)
+lazy val org             = "org.errors4s"
+lazy val jreVersion      = "17"
+lazy val projectBaseName = "errors4s"
+lazy val projectName     = s"${projectBaseName}-http"
+lazy val projectUrl      = url(s"https://github.com/errors4s/${projectName}")
+lazy val scala212        = "2.12.15"
+lazy val scala213        = "2.13.7"
+lazy val scala30         = "3.0.2"
+lazy val scalaVersions   = Set(scala212, scala213, scala30)
 
 // SBT Command Aliases //
 
@@ -55,7 +56,7 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 // Baseline version for repo split
 
-ThisBuild / versionSchemeEnforcerInitialVersion := Some("1.0.0.0")
+ThisBuild / versionSchemeEnforcerInitialVersion := Some("2.0.0.0")
 ThisBuild / versionScheme := Some("pvp")
 
 // GithubWorkflow
@@ -194,7 +195,7 @@ lazy val root = (project in file("."))
 lazy val http = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http",
+    name := s"${projectBaseName}-http",
     libraryDependencies ++= {
       if (isScala3(scalaBinaryVersion.value)) {
         Nil
@@ -213,7 +214,7 @@ lazy val http = project
 lazy val `http-circe` = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http-circe",
+    name := s"${projectBaseName}-http-circe",
     libraryDependencies ++=
       List(
         G.circeG     %% A.circeCoreA         % V.circeV,
@@ -231,7 +232,7 @@ lazy val `http-circe` = project
 lazy val `http4s-circe` = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http4s-circe",
+    name := s"${projectBaseName}-http4s-circe",
     libraryDependencies ++=
       List(
         G.circeG     %% A.circeCoreA    % V.circeV,
@@ -243,7 +244,7 @@ lazy val `http4s-circe` = project
         G.typelevelG %% A.catsCoreA     % V.catsV,
         G.typelevelG %% A.catsEffectA   % V.catsEffectV,
         G.typelevelG %% A.catsKernelA   % V.catsV,
-        G.vaultG     %% A.vaultA        % V.vaultV
+        G.typelevelG %% A.vaultA        % V.vaultV
       ),
     libraryDependencies ++=
       List(G.scalametaG %% A.munitA % V.munitV, G.typelevelG %% A.munitCatsEffectA % V.munitCatsEffectV).map(_ % Test),
@@ -263,7 +264,7 @@ lazy val `http4s-circe` = project
 lazy val http4s = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http4s",
+    name := s"${projectBaseName}-http4s",
     libraryDependencies ++=
       List(
         G.fs2G        %% A.fs2CoreA      % V.fs2V,

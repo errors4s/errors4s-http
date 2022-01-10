@@ -12,7 +12,6 @@ object GAVs {
     lazy val scalacheckG: String       = "org.scalacheck"
     lazy val scalametaG: String        = "org.scalameta"
     lazy val typelevelG: String        = "org.typelevel"
-    lazy val vaultG: String            = "io.chrisdavenport"
   }
 
   object A {
@@ -47,8 +46,8 @@ object GAVs {
     lazy val catsV: String              = "2.7.0"
     lazy val circeV: String             = "0.14.1"
     lazy val disciplineMunitV: String   = "1.0.9"
-    lazy val errors4sCoreCirceV: String = "2.0.0.0-SNAPSHOT"
-    lazy val errors4sCoreV: String      = "1.0.0.0-RC4"
+    lazy val errors4sCoreCirceV: String = "2.0.0.0"
+    lazy val errors4sCoreV: String      = "1.0.0.0"
     lazy val fs2V: String               = "2.5.10"
     lazy val http4sV: String            = "0.22.8"
     lazy val kindProjectorV: String     = "0.13.2"
@@ -56,7 +55,7 @@ object GAVs {
     lazy val organizeImportsV: String   = "0.4.4"
     lazy val scalacheckV: String        = "1.15.4"
     lazy val semanticdbV: String        = "4.4.30"
-    lazy val vaultV: String             = "2.0.0"
+    lazy val vaultV: String             = "2.1.13"
     lazy val munitCatsEffectV: String   = "1.0.7"
   }
 }

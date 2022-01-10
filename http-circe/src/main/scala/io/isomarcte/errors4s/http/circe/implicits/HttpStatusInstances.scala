@@ -6,5 +6,5 @@ import org.errors4s.http._
 private[implicits] trait HttpStatusInstances {
 
   implicit final lazy val httpStatusCodec: Codec[HttpStatus] = Codec
-    .from(Decoder[Int].emap(HttpStatus.from), Encoder[Int].contramap(_.value))
+    .from(Decoder[Int].emap(value => HttpStatus.from(value)), Encoder[Int].contramap(_.value))
 }
