@@ -2,7 +2,6 @@ package org.errors4s.http4s.circe.middleware.server
 
 import cats.data._
 import cats.effect._
-import cats.implicits._
 import munit._
 import org.errors4s.core.syntax.all._
 import org.errors4s.http._
@@ -12,10 +11,9 @@ import org.http4s._
 import org.http4s.headers._
 
 final class CirceHttpErrorToResponseTest extends CatsEffectSuite {
-  private def failingHttpRoutesJson(t: Throwable): HttpRoutes[SyncIO] =
-    CirceHttpErrorToResponse
-      .json(Sync[SyncIO])(Kleisli(Function.const(OptionT(SyncIO.raiseError[Option[Response[SyncIO]]](t)))))
-  private val testRequest: Request[SyncIO] = Request(method = Method.GET)
+  private def failingHttpRoutesJson(t: Throwable): HttpRoutes[IO] =
+    CirceHttpErrorToResponse.json(Sync[IO])(Kleisli(Function.const(OptionT(IO.raiseError[Option[Response[IO]]](t)))))
+  private val testRequest: Request[IO] = Request(method = Method.GET)
 
   test(
     "CirceHttpErrorToResponse.json middleware should yield a application/json+problem with a 501 status when a specific ExtensibleCirceHttpError is raised"
@@ -27,11 +25,11 @@ final class CirceHttpErrorToResponseTest extends CatsEffectSuite {
       .run(testRequest)
       .value
       .flatMap(
-        _.fold(SyncIO[Unit](fail("No Response"))) { resp =>
-          SyncIO(assertEquals(resp.status.code, 501)) *>
-            SyncIO(
+        _.fold(IO[Unit](fail("No Response"))) { resp =>
+          IO(assertEquals(resp.status.code, 501)) *>
+            IO(
               assertEquals(resp.headers.get[`Content-Type`], Some(`Content-Type`(MediaType.application.`problem+json`)))
-            ) *> resp.as[ExtensibleCirceHttpError].flatMap(value => SyncIO(assertEquals(value, error)))
+            ) *> resp.as[ExtensibleCirceHttpError].flatMap(value => IO(assertEquals(value, error)))
         }
       )
   }
@@ -46,11 +44,11 @@ final class CirceHttpErrorToResponseTest extends CatsEffectSuite {
       .run(testRequest)
       .value
       .flatMap(
-        _.fold(SyncIO[Unit](fail("No Response"))) { resp =>
-          SyncIO(assertEquals(resp.status.code, 501)) *>
-            SyncIO(
+        _.fold(IO[Unit](fail("No Response"))) { resp =>
+          IO(assertEquals(resp.status.code, 501)) *>
+            IO(
               assertEquals(resp.headers.get[`Content-Type`], Some(`Content-Type`(MediaType.application.`problem+json`)))
-            ) *> resp.as[ExtensibleCirceHttpProblem].flatMap(value => SyncIO(assertEquals(value, error)))
+            ) *> resp.as[ExtensibleCirceHttpProblem].flatMap(value => IO(assertEquals(value, error)))
         }
       )
   }

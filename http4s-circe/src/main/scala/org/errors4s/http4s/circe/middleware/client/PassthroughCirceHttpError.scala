@@ -31,7 +31,7 @@ object PassthroughCirceHttpError {
     * strict. This is necessarily to avoid attempting to re-stream the HTTP
     * response.
     */
-  def apply[F[_]](implicit F: Sync[F]): ClientMiddleware[F] = { (client: Client[F]) =>
+  def apply[F[_]](implicit F: Concurrent[F]): ClientMiddleware[F] = { (client: Client[F]) =>
     Client[F]((request: Request[F]) =>
       client
         .run(request)

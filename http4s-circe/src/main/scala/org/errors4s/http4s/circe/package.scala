@@ -16,7 +16,7 @@ package object circe {
       .contramap((value: ExtensibleCirceHttpProblem) => value.asJson)
       .withContentType(`Content-Type`(MediaType.application.`problem+json`))
 
-  implicit def circeHttpProblemJsonEntityDecoder[F[_]: Sync]: EntityDecoder[F, ExtensibleCirceHttpProblem] =
+  implicit def circeHttpProblemJsonEntityDecoder[F[_]: Concurrent]: EntityDecoder[F, ExtensibleCirceHttpProblem] =
     EntityDecoder.decodeBy(MediaType.application.`problem+json`)(media =>
       jsonOf[F, ExtensibleCirceHttpProblem].decode(media, false)
     )
@@ -26,19 +26,19 @@ package object circe {
       .contramap((value: ExtensibleCirceHttpError) => value.asJson)
       .withContentType(`Content-Type`(MediaType.application.`problem+json`))
 
-  implicit def circeHttpErrorJsonEntityDecoder[F[_]: Sync]: EntityDecoder[F, ExtensibleCirceHttpError] =
+  implicit def circeHttpErrorJsonEntityDecoder[F[_]: Concurrent]: EntityDecoder[F, ExtensibleCirceHttpError] =
     EntityDecoder
       .decodeBy(MediaType.application.`problem+json`)(media => jsonOf[F, ExtensibleCirceHttpError].decode(media, false))
 
   def httpErrorJsonEntityEncoder[F[_]]: EntityEncoder[F, HttpError] =
     circeHttpErrorJsonEntityEncoder[F].contramap(ExtensibleCirceHttpError.fromHttpError)
 
-  def httpErrorJsonEntityDecoder[F[_]: Sync]: EntityDecoder[F, HttpError] = circeHttpErrorJsonEntityDecoder.widen
+  def httpErrorJsonEntityDecoder[F[_]: Concurrent]: EntityDecoder[F, HttpError] = circeHttpErrorJsonEntityDecoder.widen
 
   def httpProblemJsonEntityEncoder[F[_]]: EntityEncoder[F, HttpProblem] =
     circeHttpProblemJsonEntityEncoder[F].contramap(value => ExtensibleCirceHttpProblem.fromHttpProblem(value))
 
-  def httpProblemJsonEntityDecoder[F[_]: Sync]: EntityDecoder[F, HttpProblem] =
+  def httpProblemJsonEntityDecoder[F[_]: Concurrent]: EntityDecoder[F, HttpProblem] =
     circeHttpProblemJsonEntityDecoder[F].widen
 
   /** Encode a `HttpError` as a http4s `Response.

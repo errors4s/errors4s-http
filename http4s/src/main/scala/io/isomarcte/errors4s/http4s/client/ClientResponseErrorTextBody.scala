@@ -1,7 +1,7 @@
 package org.errors4s.http4s.client
 
 import cats._
-import cats.effect.{MonadThrow => _, _}
+import cats.effect._
 import org.errors4s.http4s._
 import org.http4s._
 
@@ -25,7 +25,16 @@ object ClientResponseErrorTextBody {
   /** As [[#fromOptionRequestResponseWithConfigAndDecoder]], but uses the
     * default `EntityDecoder` for `String` values.
     */
-  def fromOptionRequestResponseWithConfigSync[F[_]: Sync](
+  @deprecated(message = "Please use fromOptionRequestResponseWithConfig instead.", since = "3.0.0.0")
+  def fromOptionRequestResponseWithConfigSync[F[_]: Concurrent](
+    config: RedactionConfiguration
+  )(request: Option[Request[F]])(response: Response[F]): F[ClientResponseErrorTextBody] =
+    fromOptionRequestResponseWithConfig[F](config)(request)(response)
+
+  /** As [[#fromOptionRequestResponseWithConfigAndDecoder]], but uses the
+    * default `EntityDecoder` for `String` values.
+    */
+  def fromOptionRequestResponseWithConfig[F[_]: Concurrent](
     config: RedactionConfiguration
   )(request: Option[Request[F]])(response: Response[F]): F[ClientResponseErrorTextBody] =
     fromOptionRequestResponseWithConfigAndDecoder[F](config, EntityDecoder.text[F])(request)(response)
@@ -42,7 +51,15 @@ object ClientResponseErrorTextBody {
   /** As [[#fromRequestResponseWithConfigAndDecoder]], but uses the default
     * `EntityDecoder` for `String` values.
     */
-  def fromRequestResponseWithConfigSync[F[_]: Sync](
+  @deprecated(message = "Please use fromRequestResponseWithConfig instead.", since = "3.0.0.0")
+  def fromRequestResponseWithConfigSync[F[_]: Concurrent](config: RedactionConfiguration)(request: Request[F])(
+    response: Response[F]
+  ): F[ClientResponseErrorTextBody] = fromRequestResponseWithConfig[F](config)(request)(response)
+
+  /** As [[#fromRequestResponseWithConfigAndDecoder]], but uses the default
+    * `EntityDecoder` for `String` values.
+    */
+  def fromRequestResponseWithConfig[F[_]: Concurrent](
     config: RedactionConfiguration
   )(request: Request[F])(response: Response[F]): F[ClientResponseErrorTextBody] =
     fromRequestResponseWithConfigAndDecoder[F](config, EntityDecoder.text[F])(request)(response)
@@ -58,8 +75,17 @@ object ClientResponseErrorTextBody {
   /** As [[#fromRequestResponseWithDecoder]], but uses the default
     * `EntityDecoder` for `String` values.
     */
-  def fromRequestResponseSync[F[_]: Sync](request: Request[F])(response: Response[F]): F[ClientResponseErrorTextBody] =
-    fromRequestResponseWithDecoder[F](EntityDecoder.text[F])(request)(response)
+  @deprecated(message = "Please use fromRequestResponse instead.", since = "3.0.0.0")
+  def fromRequestResponseSync[F[_]: Concurrent](request: Request[F])(
+    response: Response[F]
+  ): F[ClientResponseErrorTextBody] = fromRequestResponse[F](request)(response)
+
+  /** As [[#fromRequestResponseWithDecoder]], but uses the default
+    * `EntityDecoder` for `String` values.
+    */
+  def fromRequestResponse[F[_]: Concurrent](request: Request[F])(
+    response: Response[F]
+  ): F[ClientResponseErrorTextBody] = fromRequestResponseWithDecoder[F](EntityDecoder.text[F])(request)(response)
 
   /** As [[#fromOptionRequestResponseWithConfigAndDecoder]], but assumes the
     * request will never be present for error generation.
@@ -73,7 +99,15 @@ object ClientResponseErrorTextBody {
   /** As [[#fromResponseWithConfigAndDecoder]], but uses the default
     * `EntityDecoder` for `String` values.
     */
-  def fromResponseWithConfigSync[F[_]: Sync](config: RedactionConfiguration)(
+  @deprecated(message = "Please use fromResponseWithConfig instead.", since = "3.0.0.0")
+  def fromResponseWithConfigSync[F[_]: Concurrent](config: RedactionConfiguration)(
+    response: Response[F]
+  ): F[ClientResponseErrorTextBody] = fromResponseWithConfig[F](config)(response)
+
+  /** As [[#fromResponseWithConfigAndDecoder]], but uses the default
+    * `EntityDecoder` for `String` values.
+    */
+  def fromResponseWithConfig[F[_]: Concurrent](config: RedactionConfiguration)(
     response: Response[F]
   ): F[ClientResponseErrorTextBody] = fromResponseWithConfigAndDecoder[F](config, EntityDecoder.text[F])(response)
 
@@ -88,6 +122,6 @@ object ClientResponseErrorTextBody {
   /** As [[#fromResponseWithDecoder]], but uses the default `EntityDecoder` for
     * `String` values.
     */
-  def fromResponse[F[_]: Sync](response: Response[F]): F[ClientResponseErrorTextBody] =
+  def fromResponse[F[_]: Concurrent](response: Response[F]): F[ClientResponseErrorTextBody] =
     fromResponseWithDecoder[F](EntityDecoder.text[F])(response)
 }

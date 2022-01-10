@@ -227,7 +227,7 @@ object RedactionConfiguration {
       */
     def fromHeaders(headers: Headers, redact: RedactRequestHeader): RedactedRequestHeaders =
       RedactedRequestHeadersImpl(
-        value = Headers(headers.headers.foldMap(header => List(redact.value(header)))),
+        value = Headers(headers.headers.foldMap(header => List(redact.value(header))): List[Header.Raw]),
         unredacted = headers
       )
 
@@ -283,7 +283,7 @@ object RedactionConfiguration {
 
     def fromHeaders(headers: Headers, redact: RedactResponseHeader): RedactedResponseHeaders =
       RedactedResponseHeadersImpl(
-        value = Headers(headers.headers.foldMap(header => List(redact.value(header)))),
+        value = Headers(headers.headers.foldMap(header => List(redact.value(header))): List[Header.Raw]),
         unredacted = headers
       )
 
@@ -339,5 +339,8 @@ object RedactionConfiguration {
 
   def defaultRedactValue[A](value: A): String = redactWithConstantString[A]("<REDACTED>")(value)
 
-  def redactWithConstantString[A](constant: String)(@nowarn("cat=unused") value: A): String = constant
+  def redactWithConstantString[A](constant: String)(
+    @nowarn
+    value: A
+  ): String = constant
 }
