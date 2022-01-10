@@ -207,10 +207,11 @@ lazy val http = project
   .settings(
     name := s"${projectBaseName}-http",
     libraryDependencies ++= {
-      if (isScala3(scalaBinaryVersion.value)) {
-        Nil
-      } else {
+      if (scalaBinaryVersion.value == "2.13") {
+        // Apparently this is only needed on 2.13 /shrug
         List("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided),
+      } else {
+        Nil
       }
     },
     libraryDependencies ++= List(org %% A.errors4sCoreA % V.errors4sCoreV),
