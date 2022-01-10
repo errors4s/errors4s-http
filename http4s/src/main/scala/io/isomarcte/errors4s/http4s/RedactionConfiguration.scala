@@ -425,7 +425,7 @@ object RedactionConfiguration {
       *       they are case insensitive. If you want case sensitive redaction,
       *       then do not use this method.
       */
-    def allowList(queryParamKeys: Set[CaseInsensitiveString]): RedactUriQueryParam =
+    def allowList(queryParamKeys: Set[String]): RedactUriQueryParam =
       allowListCI(queryParamKeys.map(CaseInsensitiveString.apply))
 
     /** Do not redact query parameter values with a case insensitive name
