@@ -19,7 +19,7 @@ lazy val scalaVersions   = Set(scala212, scala213, scala30)
 // Usually run before making a PR
 addCommandAlias(
   "full_build",
-  s";+clean;githubWorkflowGenerate;+test;+test:doc;+versionSchemeEnforcerCheck;++${scala213};scalafmtAll;scalafmtSbt;scalafixAll;docs/mdoc"
+  s";+clean;githubWorkflowGenerate;undeclaredCompileDependenciesTest;unusedCompileDependenciesTest;+test;+test:doc;+versionSchemeEnforcerCheck;++${scala213};scalafmtAll;scalafmtSbt;scalafixAll;docs/mdoc"
 )
 
 // Functions //
@@ -64,7 +64,17 @@ ThisBuild / githubWorkflowPublishTargetBranches := Nil
 ThisBuild / githubWorkflowOSes := Set("macos-latest", "ubuntu-latest").toList
 ThisBuild / githubWorkflowJavaVersions :=
   Set("17", "11", "8").map(version => JavaSpec(JavaSpec.Distribution.Temurin, version)).toList
-ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("versionSchemeEnforcerCheck", "Test / doc")))
+ThisBuild / githubWorkflowBuild :=
+  List(
+    WorkflowStep.Sbt(
+      List(
+        "versionSchemeEnforcerCheck",
+        "Test / doc",
+        "undeclaredCompileDependenciesTest",
+        "unusedCompileDependenciesTest"
+      )
+    )
+  )
 
 // Doc Settings
 
@@ -197,10 +207,11 @@ lazy val http = project
   .settings(
     name := s"${projectBaseName}-http",
     libraryDependencies ++= {
-      if (isScala3(scalaBinaryVersion.value)) {
-        Nil
-      } else {
+      if (scalaBinaryVersion.value == "2.13") {
+        // Apparently this is only needed on 2.13 /shrug
         List("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided),
+      } else {
+        Nil
       }
     },
     libraryDependencies ++= List(org %% A.errors4sCoreA % V.errors4sCoreV),
@@ -220,6 +231,7 @@ lazy val `http-circe` = project
         G.circeG     %% A.circeCoreA         % V.circeV,
         G.typelevelG %% A.catsCoreA          % V.catsV,
         G.typelevelG %% A.catsKernelA        % V.catsV,
+        org          %% A.errors4sCoreA      % V.errors4sCoreV,
         org          %% A.errors4sCoreCirceA % V.errors4sCoreCirceV
       ),
     console / initialCommands :=
@@ -267,7 +279,6 @@ lazy val http4s = project
     name := s"${projectBaseName}-http4s",
     libraryDependencies ++=
       List(
-        G.fs2G        %% A.fs2CoreA      % V.fs2V,
         G.http4sG     %% A.http4sCoreA   % V.http4sV,
         org           %% A.errors4sCoreA % V.errors4sCoreV,
         G.typelevelG  %% A.catsCoreA     % V.catsV,
