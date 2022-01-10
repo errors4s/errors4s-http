@@ -25,7 +25,7 @@ import org.http4s._
   * trade off of ease of use while still collecting lots of error
   * information. If you wish to merely treat the error body as text, you might
   * consider
-  * [[org.errors4s.http4s.client.ClientResponseErrorTextBody#fromRequestResponseWithConfigSync]]
+  * [[org.errors4s.http4s.client.ClientResponseErrorTextBody#fromRequestResponseWithConfig]]
   * as well.
   *
   * @see [[https://http4s.org/v0.21/api/org/http4s/client/client Http4s Client]]
