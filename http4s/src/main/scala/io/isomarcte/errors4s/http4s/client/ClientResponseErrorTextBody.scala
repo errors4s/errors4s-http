@@ -25,7 +25,7 @@ object ClientResponseErrorTextBody {
   /** As [[#fromOptionRequestResponseWithConfigAndDecoder]], but uses the
     * default `EntityDecoder` for `String` values.
     */
-  def fromOptionRequestResponseWithConfigSync[F[_]: Sync](
+  def fromOptionRequestResponseWithConfig[F[_]: Sync](
     config: RedactionConfiguration
   )(request: Option[Request[F]])(response: Response[F]): F[ClientResponseErrorTextBody] =
     fromOptionRequestResponseWithConfigAndDecoder[F](config, EntityDecoder.text[F])(request)(response)
@@ -42,7 +42,7 @@ object ClientResponseErrorTextBody {
   /** As [[#fromRequestResponseWithConfigAndDecoder]], but uses the default
     * `EntityDecoder` for `String` values.
     */
-  def fromRequestResponseWithConfigSync[F[_]: Sync](
+  def fromRequestResponseWithConfig[F[_]: Sync](
     config: RedactionConfiguration
   )(request: Request[F])(response: Response[F]): F[ClientResponseErrorTextBody] =
     fromRequestResponseWithConfigAndDecoder[F](config, EntityDecoder.text[F])(request)(response)
@@ -58,7 +58,7 @@ object ClientResponseErrorTextBody {
   /** As [[#fromRequestResponseWithDecoder]], but uses the default
     * `EntityDecoder` for `String` values.
     */
-  def fromRequestResponseSync[F[_]: Sync](request: Request[F])(response: Response[F]): F[ClientResponseErrorTextBody] =
+  def fromRequestResponse[F[_]: Sync](request: Request[F])(response: Response[F]): F[ClientResponseErrorTextBody] =
     fromRequestResponseWithDecoder[F](EntityDecoder.text[F])(request)(response)
 
   /** As [[#fromOptionRequestResponseWithConfigAndDecoder]], but assumes the
@@ -73,7 +73,7 @@ object ClientResponseErrorTextBody {
   /** As [[#fromResponseWithConfigAndDecoder]], but uses the default
     * `EntityDecoder` for `String` values.
     */
-  def fromResponseWithConfigSync[F[_]: Sync](config: RedactionConfiguration)(
+  def fromResponseWithConfig[F[_]: Sync](config: RedactionConfiguration)(
     response: Response[F]
   ): F[ClientResponseErrorTextBody] = fromResponseWithConfigAndDecoder[F](config, EntityDecoder.text[F])(response)
 
