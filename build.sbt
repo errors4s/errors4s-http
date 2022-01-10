@@ -4,14 +4,15 @@ import _root_.org.errors4s.sbt._
 
 // Constants //
 
-lazy val org           = "org.errors4s"
-lazy val jreVersion    = "17"
-lazy val projectName   = "errors4s-http"
-lazy val projectUrl    = url(s"https://github.com/errors4s/${projectName}")
-lazy val scala212      = "2.12.15"
-lazy val scala213      = "2.13.7"
-lazy val scala3        = "3.0.2"
-lazy val scalaVersions = Set(scala212, scala213)
+lazy val org             = "org.errors4s"
+lazy val jreVersion      = "17"
+lazy val projectBaseName = "errors4s"
+lazy val projectName     = s"${projectBaseName}-http"
+lazy val projectUrl      = url(s"https://github.com/errors4s/${projectName}")
+lazy val scala212        = "2.12.15"
+lazy val scala213        = "2.13.7"
+lazy val scala3          = "3.0.2"
+lazy val scalaVersions   = Set(scala212, scala213)
 
 // SBT Command Aliases //
 
@@ -194,7 +195,7 @@ lazy val root = (project in file("."))
 lazy val http = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http",
+    name := s"${projectBaseName}-http",
     libraryDependencies ++= {
       if (isScala3(scalaBinaryVersion.value)) {
         Nil
@@ -214,7 +215,7 @@ lazy val http = project
 lazy val `http-circe` = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http-circe",
+    name := s"${projectBaseName}-http-circe",
     libraryDependencies ++=
       List(
         G.circeG     %% A.circeCoreA         % V.circeV,
@@ -232,7 +233,7 @@ lazy val `http-circe` = project
 lazy val `http4s-circe` = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http4s-circe",
+    name := s"${projectBaseName}-http4s-circe",
     libraryDependencies ++=
       List(
         G.circeG     %% A.circeCoreA    % V.circeV,
@@ -264,7 +265,7 @@ lazy val `http4s-circe` = project
 lazy val http4s = project
   .settings(commonSettings, publishSettings)
   .settings(
-    name := s"${projectName}-http4s",
+    name := s"${projectBaseName}-http4s",
     libraryDependencies ++=
       List(
         G.fs2G        %% A.fs2CoreA      % V.fs2V,

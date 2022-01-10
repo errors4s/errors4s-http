@@ -1,10 +1,8 @@
 # Errors Http Errors #
 
-This project provides an implementation of [RFC 7807][rfc-7807] for use with [Errors4s Core][errors4s].
+Http related tooling for errors4s.
 
-[RFC 7807][rfc-7807] provides a standard for describing errors in http based operations, beyond that which is only expressible in the http specification.
-
-[errors4s]: https://github.com/errors4s/errors4s-core "Errors4s Core"
+The README is a work in progress.
 
 # ScalaDoc #
 
