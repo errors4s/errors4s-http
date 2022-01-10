@@ -16,6 +16,7 @@ object GAVs {
 
   object A {
     lazy val betterMonadicForA: String  = "better-monadic-for"
+    lazy val caseInsensitiveA: String   = "case-insensitive"
     lazy val catsCoreA: String          = "cats-core"
     lazy val catsEffectA: String        = "cats-effect"
     lazy val catsKernelA: String        = "cats-kernel"
@@ -42,6 +43,7 @@ object GAVs {
 
   object V {
     lazy val betterMonadicForV: String  = "0.3.1"
+    lazy val caseInsensitiveV: String   = "1.2.0"
     lazy val catsEffectV: String        = "2.5.4"
     lazy val catsV: String              = "2.7.0"
     lazy val circeV: String             = "0.14.1"
@@ -51,11 +53,11 @@ object GAVs {
     lazy val fs2V: String               = "2.5.10"
     lazy val http4sV: String            = "0.22.8"
     lazy val kindProjectorV: String     = "0.13.2"
+    lazy val munitCatsEffectV: String   = "1.0.7"
     lazy val munitV: String             = "0.7.29"
     lazy val organizeImportsV: String   = "0.4.4"
     lazy val scalacheckV: String        = "1.15.4"
     lazy val semanticdbV: String        = "4.4.30"
     lazy val vaultV: String             = "2.1.13"
-    lazy val munitCatsEffectV: String   = "1.0.7"
   }
 }

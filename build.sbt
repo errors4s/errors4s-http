@@ -279,14 +279,15 @@ lazy val http4s = project
     name := s"${projectBaseName}-http4s",
     libraryDependencies ++=
       List(
-        G.http4sG     %% A.http4sCoreA   % V.http4sV,
-        org           %% A.errors4sCoreA % V.errors4sCoreV,
-        G.typelevelG  %% A.catsCoreA     % V.catsV,
-        G.typelevelG  %% A.catsEffectA   % V.catsEffectV,
-        G.typelevelG  %% A.catsKernelA   % V.catsV,
-        G.http4sG     %% A.http4sClientA % V.http4sV     % Test,
-        G.http4sG     %% A.http4sLawsA   % V.http4sV     % Test,
-        G.scalacheckG %% A.scalacheckA   % V.scalacheckV % Test
+        G.http4sG     %% A.http4sCoreA      % V.http4sV,
+        G.typelevelG  %% A.caseInsensitiveA % V.caseInsensitiveV,
+        G.typelevelG  %% A.catsCoreA        % V.catsV,
+        G.typelevelG  %% A.catsEffectA      % V.catsEffectV,
+        G.typelevelG  %% A.catsKernelA      % V.catsV,
+        org           %% A.errors4sCoreA    % V.errors4sCoreV,
+        G.http4sG     %% A.http4sClientA    % V.http4sV     % Test,
+        G.http4sG     %% A.http4sLawsA      % V.http4sV     % Test,
+        G.scalacheckG %% A.scalacheckA      % V.scalacheckV % Test
       ),
     console / initialCommands :=
       List(
